@@ -1,0 +1,22 @@
+{
+  "name": "diagramio",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev:backend": "bun --watch backend/index.ts",
+    "dev:frontend": "cd frontend && bun run dev",
+    "build:frontend": "cd frontend && bun run build",
+    "preview:frontend": "cd frontend && bun run preview",
+    "start": "bun run dev:backend"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "hono": "^4.11.1"
+  }
+}
