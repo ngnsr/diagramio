@@ -23,17 +23,28 @@ function App() {
     setDiagram(SAMPLE_MERMAID.trim());
   }, []);
 
-  const generate = async () => {
+  const generateOrImprove = async (isImprovement: boolean) => {
     if (!prompt.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:3000/api/generate-diagram", {
+      let apiUrl = "http://localhost:3000/api/generate-diagram";
+      let requestBody: any = { text: prompt };
+
+      if (isImprovement && diagram) {
+        apiUrl = "http://localhost:3000/api/improve-diagram";
+        requestBody = {
+          currentDiagram: diagram,
+          prompt: prompt,
+        };
+      }
+
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: prompt }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await res.json();
@@ -50,7 +61,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>AI Diagram Generator</h1>
+        <h1>AI Diagram Generator & Improver</h1>
         <p>{backendMessage}</p>
 
         {diagram && (
@@ -61,22 +72,32 @@ function App() {
 
         {error && <p className="error-message">{error}</p>}
 
-        <div className="input-section">
+        <div className="input-section input-section-with-buttons">
           <div className="input-actions">
-            {" "}
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
-              placeholder="Describe your diagram..."
+              placeholder="Describe your diagram or how to improve it..."
             />
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="generate-button"
-            >
-              🚀
-            </button>
+            <div className="action-buttons">
+              <button
+                onClick={() => generateOrImprove(false)}
+                disabled={loading}
+                className="btn btn-primary"
+              >
+                Generate
+              </button>
+              {diagram && (
+                <button
+                  onClick={() => generateOrImprove(true)}
+                  disabled={loading}
+                  className="btn btn-secondary"
+                >
+                  Improve
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>
