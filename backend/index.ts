@@ -1,27 +1,55 @@
-import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import OpenAI from "openai";
 
-type Bindings = {};
-type Variables = {};
-
-if (!process.env.LLM7_API_KEY) {
-  throw new Error("LLM7_API_KEY is not set");
+const LLM7_API_KEY = process.env.LLM7_API_KEY;
+if (!LLM7_API_KEY) {
+  throw new Error("LLM7_API_KEY is not set.");
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.LLM7_API_KEY,
+  apiKey: LLM7_API_KEY,
   baseURL: "https://api.llm7.io/v1",
 });
 
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new Hono();
 
 app.use("*", cors());
 
-app.get("/health", (c) => {
+app.get("/api/health", (c) => {
   return c.json({ status: "ok" });
+});
+
+app.post("/api/transcribe", async (c) => {
+  const formData = await c.req.parseBody({ all: true });
+  const audioFile = formData.audio;
+
+  if (!audioFile || Array.isArray(audioFile)) {
+    throw new HTTPException(400, {
+      message: "No audio file provided or invalid format.",
+    });
+  }
+
+  const buffer = Buffer.from(await audioFile.arrayBuffer());
+
+  const formDataToSend = new FormData();
+  formDataToSend.append("file", new Blob([buffer]), "audio.wav");
+
+  const resp = await fetch("http://localhost:8000/transcribe", {
+    method: "POST",
+    body: formDataToSend,
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new HTTPException(resp.status, {
+      message: `Transcription service error: ${errText}`,
+    });
+  }
+
+  const data = await resp.json();
+  return c.json({ text: data.text });
 });
 
 app.post("/api/generate-diagram", async (c) => {

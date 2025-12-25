@@ -18,8 +18,11 @@
   },
   "dependencies": {
     "@types/codemirror": "^5.60.17",
+    "@types/multer": "^2.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "hono": "^4.11.1",
+    "multer": "^2.0.2",
     "openai": "^6.15.0"
   }
 }
