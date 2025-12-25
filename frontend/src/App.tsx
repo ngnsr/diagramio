@@ -40,8 +40,8 @@ function App() {
       if (!res.ok) throw new Error(data.error);
 
       setDiagram(data.mermaidSyntax);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) setError(e.message);
     } finally {
       setLoading(false);
     }

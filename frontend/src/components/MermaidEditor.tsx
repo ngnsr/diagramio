@@ -21,6 +21,28 @@ const MermaidEditor: React.FC<MermaidEditorProps> = ({
   const editorRef = useRef<CodeMirror.Editor | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
+  const renderMermaid = async (code: string) => {
+    if (!previewRef.current) return;
+
+    try {
+      await mermaid.parse(code);
+
+      const { svg } = await mermaid.render(`m-${Date.now()}`, code);
+
+      previewRef.current.innerHTML = svg;
+
+      const svgEl = previewRef.current.querySelector("svg");
+      if (svgEl) {
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error)
+        previewRef.current!.innerHTML = `<pre>${err.message}</pre>`;
+    }
+  };
+
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
@@ -74,29 +96,6 @@ const MermaidEditor: React.FC<MermaidEditorProps> = ({
       renderMermaid(initialCode);
     }
   }, [initialCode]);
-
-  const renderMermaid = async (code: string) => {
-    if (!previewRef.current) return;
-
-    try {
-      await mermaid.parse(code);
-
-      const { svg } = await mermaid.render(`m-${Date.now()}`, code);
-
-      previewRef.current.innerHTML = svg;
-
-      const svgEl = previewRef.current.querySelector("svg");
-      if (svgEl) {
-        svgEl.removeAttribute("width");
-        svgEl.removeAttribute("height");
-        svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
-      }
-    } catch (err: any) {
-      previewRef.current.innerHTML = `<pre>${err.message}</pre>`;
-    }
-  };
-
-  /* ===== Export helpers ===== */
 
   const exportSVG = () => {
     const svg = previewRef.current?.querySelector("svg");
