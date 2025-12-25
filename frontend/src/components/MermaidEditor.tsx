@@ -79,6 +79,8 @@ const MermaidEditor: React.FC<MermaidEditorProps> = ({
     if (!previewRef.current) return;
 
     try {
+      await mermaid.parse(code);
+
       const { svg } = await mermaid.render(`m-${Date.now()}`, code);
 
       previewRef.current.innerHTML = svg;
