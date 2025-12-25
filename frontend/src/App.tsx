@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 import MermaidEditor from "./components/MermaidEditor";
+import { SAMPLE_PROMPT, SAMPLE_MERMAID } from "./examples/sample-diagrams";
 
 function App() {
   const [backendMessage, setBackendMessage] = useState("");
@@ -16,6 +16,11 @@ function App() {
       .catch(() =>
         setBackendMessage("Backend unavailable at http://localhost:3000")
       );
+  }, []);
+
+  useEffect(() => {
+    setPrompt(SAMPLE_PROMPT.trim());
+    setDiagram(SAMPLE_MERMAID.trim());
   }, []);
 
   const generate = async () => {
@@ -57,15 +62,22 @@ function App() {
         {error && <p className="error-message">{error}</p>}
 
         <div className="input-section">
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={4}
-            placeholder="Describe your diagram..."
-          />
-          <button onClick={generate} disabled={loading}>
-            {loading ? "Generating..." : "Generate"}
-          </button>
+          <div className="input-actions">
+            {" "}
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={4}
+              placeholder="Describe your diagram..."
+            />
+            <button
+              onClick={generate}
+              disabled={loading}
+              className="generate-button"
+            >
+              🚀
+            </button>
+          </div>
         </div>
       </header>
     </div>

@@ -67,20 +67,20 @@ Rules:
     if (!mermaidSyntax) {
       throw new Error("Empty Mermaid response from LLM7");
     }
+    console.log("Generated Mermaid syntax:", mermaidSyntax);
 
     if (
       !mermaidSyntax.startsWith("graph") &&
       !mermaidSyntax.startsWith("sequenceDiagram") &&
       !mermaidSyntax.startsWith("erDiagram") &&
       !mermaidSyntax.startsWith("classDiagram") &&
-      !mermaidSyntax.startsWith("stateDiagram")
+      !mermaidSyntax.startsWith("stateDiagram") &&
+      !mermaidSyntax.startsWith("flowchart")
     ) {
       throw new HTTPException(500, {
         message: "Model returned invalid Mermaid syntax",
       });
     }
-
-    console.log("Generated Mermaid syntax:", mermaidSyntax);
 
     return c.json({ mermaidSyntax });
   } catch (error) {

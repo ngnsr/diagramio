@@ -1,3 +1,4 @@
+import "./MermaidEditor.css";
 import React, { useEffect, useRef } from "react";
 import mermaid from "mermaid";
 import CodeMirror from "codemirror";
@@ -57,6 +58,7 @@ const MermaidEditor: React.FC<MermaidEditorProps> = ({
 
     editorRef.current = editor;
     renderMermaid(initialCode);
+    setTimeout(() => editor.refresh(), 0);
 
     return () => {
       editor.toTextArea();
@@ -77,20 +79,90 @@ const MermaidEditor: React.FC<MermaidEditorProps> = ({
     if (!previewRef.current) return;
 
     try {
-      const { svg } = await mermaid.render(`mermaid-${Date.now()}`, code);
+      const { svg } = await mermaid.render(`m-${Date.now()}`, code);
+
       previewRef.current.innerHTML = svg;
+
+      const svgEl = previewRef.current.querySelector("svg");
+      if (svgEl) {
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      }
     } catch (err: any) {
-      previewRef.current.innerHTML = `<pre style="color:red;">${err.message}</pre>`;
+      previewRef.current.innerHTML = `<pre>${err.message}</pre>`;
     }
+  };
+
+  /* ===== Export helpers ===== */
+
+  const exportSVG = () => {
+    const svg = previewRef.current?.querySelector("svg");
+    if (!svg) return;
+
+    const blob = new Blob([svg.outerHTML], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+
+    download(blob, "diagram.svg");
+  };
+
+  const exportPNG = async () => {
+    const svg = previewRef.current?.querySelector("svg");
+    if (!svg) return;
+
+    const svgData = new Blob([svg.outerHTML], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(svgData);
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((blob) => blob && download(blob, "diagram.png"));
+      URL.revokeObjectURL(url);
+    };
+
+    img.src = url;
+  };
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(initialCode);
+  };
+
+  const download = (blob: Blob, filename: string) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   return (
     <div className="mermaid-editor">
-      <div className="editor-pane">
-        <textarea ref={textareaRef} style={{ display: "none" }} />
+      <div className="editor-pane" data-title="Mermaid source">
+        <div className="editor-content">
+          <textarea ref={textareaRef} style={{ display: "none" }} />
+        </div>
       </div>
 
-      <div className="preview-pane" ref={previewRef} />
+      <div className="preview-pane" data-title="Preview">
+        <div className="preview-toolbar">
+          <button onClick={copyCode}>Copy</button>
+          <button onClick={exportSVG}>SVG</button>
+          <button onClick={exportPNG}>PNG</button>
+        </div>
+
+        <div className="preview-content" ref={previewRef} />
+      </div>
     </div>
   );
 };
